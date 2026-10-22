@@ -246,7 +246,19 @@ class WindowsShiftWheel(QObject):
         self.user.GetAsyncKeyState.restype = ctypes.c_short
         self.user.GetForegroundWindow.restype = ctypes.c_void_p
         self.user.GetClassNameW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_int]
-        self.timer.start(40)
+
+    def set_enabled(self, enabled):
+        self.enabled = bool(enabled)
+        self.cancelled = True
+        self.gesture_started = None
+        self.down = False
+        if self.enabled:
+            self.timer.start(40)
+        else:
+            self.timer.stop()
+            self.timeout.stop()
+            self.lookup.kill()
+            self.overlay.hide()
 
     def held(self, key):
         return bool(self.user.GetAsyncKeyState(key) & 0x8000)
@@ -324,5 +336,5 @@ class WindowsShiftWheel(QObject):
         self.window.start()
 
     def stop(self):
-        self.timer.stop(); self.overlay.close(); self.lookup.kill()
+        self.timer.stop(); self.timeout.stop(); self.overlay.close(); self.lookup.kill()
         self.lookup.waitForFinished(1000)

@@ -106,6 +106,18 @@ class WheelTests(unittest.TestCase):
         self.assertFalse(monitor.overlay.isVisible())
         monitor.stop(); window.close()
 
+    def test_disabled_wheel_does_not_poll_input(self):
+        window = Window(global_wheel=False)
+        with patch('windows_wheel.ctypes.WinDLL', create=True, return_value=Mock()):
+            monitor = WindowsShiftWheel(window)
+        self.assertFalse(monitor.timer.isActive())
+        monitor.set_enabled(True)
+        self.assertTrue(monitor.timer.isActive())
+        monitor.set_enabled(False)
+        self.assertFalse(monitor.timer.isActive())
+        self.assertTrue(monitor.cancelled)
+        monitor.stop(); window.close()
+
     def test_shift_typing_and_editor_drags_do_not_start_lookup(self):
         window = Window(global_wheel=False)
         user = Mock()

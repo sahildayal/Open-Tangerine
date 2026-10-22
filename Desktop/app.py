@@ -93,13 +93,12 @@ class Window(QMainWindow):
             self.shift_wheel=WindowsShiftWheel(self)
             self.shift_toggle=QCheckBox('Enable experimental Shift drag wheel in Explorer / Desktop')
             self.shift_toggle.setChecked(self.settings.value('shiftWheel', False, type=bool))
-            self.shift_wheel.enabled=self.shift_toggle.isChecked()
+            self.shift_wheel.set_enabled(self.shift_toggle.isChecked())
             self.shift_toggle.toggled.connect(self.toggle_shift_wheel)
             layout.addWidget(self.shift_toggle)
     def toggle_shift_wheel(self, enabled):
         self.settings.setValue('shiftWheel',enabled)
-        self.shift_wheel.enabled=enabled
-        if not enabled:self.shift_wheel.overlay.hide()
+        self.shift_wheel.set_enabled(enabled)
     def update_options(self):
         enabled=self.target.currentText() in ['PNG','JPEG','WEBP','TIFF','BMP','Image → PDF'];self.width.setEnabled(enabled);self.rotate.setEnabled(enabled)
     def add_paths(self,paths):
