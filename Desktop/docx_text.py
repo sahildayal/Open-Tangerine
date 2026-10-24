@@ -86,8 +86,18 @@ def main_part(archive):
     return name
 
 
+def switched_on(properties, flag):
+    """True when a run/paragraph property such as w:vanish is present and not set to false."""
+    if properties is None:
+        return False
+    element = next((c for c in properties if local(c.tag) == flag), None)
+    if element is None:
+        return False
+    return next((v for k, v in element.attrib.items() if local(k) == 'val'), 'true') not in ('0', 'false', 'off')
+
+
 def paragraph_text(paragraph):
-    """Text of one paragraph in document order, skipping SKIPPED subtrees."""
+    """Text of one paragraph in document order, skipping SKIPPED subtrees and hidden runs."""
     out = []
     stack = [iter(paragraph)]
     while stack:
@@ -96,6 +106,9 @@ def paragraph_text(paragraph):
             stack.pop(); continue
         name = local(element.tag)
         if name in SKIPPED:
+            continue
+        # Hidden text stays hidden, as in Word's own PDF export.
+        if name == 'r' and switched_on(next((c for c in element if local(c.tag) == 'rPr'), None), 'vanish'):
             continue
         if name == 't':
             out.append(element.text or '')
@@ -120,14 +133,7 @@ def paragraph_text(paragraph):
 
 
 def page_break_before(paragraph):
-    properties = next((c for c in paragraph if local(c.tag) == 'pPr'), None)
-    if properties is None:
-        return False
-    flag = next((c for c in properties if local(c.tag) == 'pageBreakBefore'), None)
-    if flag is None:
-        return False
-    value = next((v for k, v in flag.attrib.items() if local(k) == 'val'), 'true')
-    return value not in ('0', 'false', 'off')
+    return switched_on(next((c for c in paragraph if local(c.tag) == 'pPr'), None), 'pageBreakBefore')
 
 
 def flatten_cell(cell):

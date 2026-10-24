@@ -35,6 +35,12 @@ class DocxTests(unittest.TestCase):
         # Insertions kept, deletions, field codes and text-box duplicates dropped.
         self.assertEqual(extract_docx(self.docx(SAMPLE_BODY)), SAMPLE_LINES)
 
+    def test_hidden_text_is_not_extracted(self):
+        # Word leaves hidden (w:vanish) runs out of its own PDF export; so does this.
+        hidden = '<w:r><w:rPr><w:vanish/></w:rPr><w:t>secret</w:t></w:r>'
+        shown = '<w:r><w:rPr><w:vanish w:val="false"/></w:rPr><w:t>shown</w:t></w:r>'
+        self.assertEqual(extract_docx(self.docx(para(run('visible '), hidden, shown))), ['visible shown'])
+
     def test_strict_ooxml_namespace(self):
         xml = document(para(run('strict')), ns='http://purl.oclc.org/ooxml/wordprocessingml/main')
         self.assertEqual(extract_docx(self.docx(xml=xml)), ['strict'])
